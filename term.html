@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+
+	<body>
+		<div id="container-terminal"></div>//插件即将出现模拟屏幕的地方
+
+		<style type="text/css">
+			#container-terminal {
+				width: 100%;
+			}
+		</style>
+		<script type="text/javascript" src="./term.js"></script>//引入插件js文件
+		<script type="text/javascript">
+			var term;　　
+			var wsUrl = "ws://47.75.170.16/sundax/wsPublicMessage"
+			websocket = new WebSocket(wsUrl); //new 一个websocket实例
+			websocket.onopen = function(evt) { //打开连接websocket
+				　　
+				term = new Terminal({ //new 一个terminal实例，就是数据展示的屏幕和一些见简单设置，包括屏幕的宽度，高度，光标是否闪烁等等
+					　　
+					cols: 200,
+					　　rows: 80,
+					　　screenKeys: true,
+					　　useStyle: true,
+					　　cursorBlink: true,
+				});
+
+				　　 /*term实时监控输入的数据，并且websocket把实时数据发送给后台*/
+				term.on('data', function(data) { //term.on方法就是实时监控输入的字段，
+					　　
+					websocket.send(data); //websocket发送给后台
+				});
+				term.on('title', function(title) {　　 //document.title = title;
+				});
+				term.open(document.getElementById('container-terminal')); //屏幕将要在哪里展示，就是屏幕展示的地方
+				websocket.onmessage = function(evt) { //接受到数据
+					　　
+					term.write(evt.data); //把接收的数据写到这个插件的屏幕上
+				}
+				websocket.onclose = function(evt) { //websocket关闭
+					　　
+					term.write("Session terminated");　　
+					term.destroy(); //屏幕关闭
+				}
+				websocket.onerror = function(evt) { //失败额处理
+					　　
+					if(typeof console.log == "function") {　　　　
+						console.log(evt)　　
+					}
+				}
+			}
+
+			var close = function() { //关闭websocket
+				websocket.close();
+			};
+		</script>
+	</body>
+
+</html>
